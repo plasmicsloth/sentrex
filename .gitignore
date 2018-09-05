@@ -1,3 +1,5 @@
 api
 userid
 all
+*.psv
+*.log
