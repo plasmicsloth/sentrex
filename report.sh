@@ -20,8 +20,8 @@ function usage {
 
 # SET DEFAULT VALUES
 URL='https://secure.sentryds.com/api/reporter/'
-USER_ID='2469'
-API_KEY='$6$gOfTAhrO$Ern/1VJgz6KOvz.het/wa3F7J4.FEdonQioh3BDjmaEDunKkYAi6aydm85ghVXIV/kPyl8.CgyQThIfzx3yUp0'
+USER_ID=$(<./userid)
+API_KEY=$(<./api)
 PRODUCT='sentrex'
 REPORT='claim'
 OUTPUT='psv'
