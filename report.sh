@@ -1,11 +1,7 @@
 #!/bin/bash
 
-# INITIAL SETUP
-DEBUGGING=false
-FOLDER="/home/dom/sentrex"
-ATTEMPTS=0
 
-# usage
+# USAGE
 function usage {
         echo "  Usage: ./report.sh [OPTIONS...]"
         echo "  #depricated# -p, --product       Name of Product report (Default = sentrex)"
@@ -18,7 +14,11 @@ function usage {
         exit
 }
 
-# SET DEFAULT VALUES
+# INITIAL SETUP
+DEBUGGING=false
+FOLDER="/home/dom/sentrex"
+ATTEMPTS=0
+# API SETUP
 URL='https://secure.sentryds.com/api/reporter/'
 USER_ID=$(<./userid)
 API_KEY=$(<./api)
@@ -58,15 +58,14 @@ while [ "$1" != "" ]; do
 done
 
 # CALCULATE DATES
-
 if [ -z $STARTDATE ]
 then
+	# always default to yesterday if no date was specified, report now runs daily
 	STARTDATE=$( date --date="yesterday" +%Y/%m/%d )
 	ENDDATE=$STARTDATE
 fi
 
 # BUILD QUERY
-
 QUERYSTRING="product=${PRODUCT}&report=${REPORT}&output=${OUTPUT}&columns=note"
 QUERYSTRING+="&start_date=${STARTDATE}&end_date=${ENDDATE}"
 if [ ! -z $CONTRACT_IDS ] ## if a contract pharmacy was specified, add it to the query
@@ -83,14 +82,12 @@ HASH="${HASHING:0:32}" # but we have to strip off the extra characters when usin
 FILENAME="${FOLDER}/results/${STARTDATE//[\/]/}_${PRODUCT}.${OUTPUT}"
 
 # EXECUTION or DEBUGGING
-
 if [ $DEBUGGING = true ]
 then
 	echo `date`
 	echo " "
 	echo "Query: ${QUERYSTRING}&key=${API_KEY}"
-	echo "Query: ${QUERYSTRING}&key=${API_KEY}" > ${FILENAME}.txt
-	echo "curl command\n curl $URL -o $FILENAME -d \"${QUERYSTRING}&hash=${HASH}\""
+	echo "curl command:\n curl $URL -o $FILENAME -d \"${QUERYSTRING}&hash=${HASH}\""
 	echo " "
 	echo "Hash: ${HASH}"
 	echo "Filename: ${FILENAME}"
@@ -100,20 +97,26 @@ else
 	echo "curling $URL -s -o $FILENAME -d \"${QUERYSTRING}&hash=${HASH}\"" >> ${FILENAME}.log
 	curl $URL -o $FILENAME -d "${QUERYSTRING}&hash=${HASH}"
 
+	# Check file size, API error is only 8KB, proper results >1MB
 	FSIZE=$(stat -c %s $FILENAME)
 	while [ $FSIZE -lt 10000 ] && [ $ATTEMPTS -lt 3 ];
 	do
-		ATTEMPTS=$(( $ATTEMPTS + 1 ))
+		echo `date` >> ${FILENAME}.log
+		echo 'File returned is ${FSIZE}, must be API error message' >> ${FILENAME}.log
+		# sleep 5 minutes and try again
 		sleep 300
+		ATTEMPTS=$(( $ATTEMPTS + 1 ))
 		curl $URL -o $FILENAME -d "${QUERYSTRING}&hash=${HASH}"
 		FSIZE=$(stat -c %s $FILENAME)
 	done
 	if [ $FSIZE -gt 10000 ]
 	then
+		# If after 4 attempts the file looks good, copy it to box for transfer
 		cp $FILENAME /mnt/c/Users/Dom/Box\ Sync/sentry/.
 		echo `date` >> ${FILENAME}.log
 		echo "${ATTEMPTS} Reattempts" >> ${FILENAME}.log
 	else
+		# Gave up after 4 trys, touch an empty file just to get my attention to try and re-run before improt
 		echo "file too small after ${ATTEMPTS} attempts" >> ${FILENAME}.log
 		touch /mnt/c/Users/Dom/Box\ Sync/sentry/FAILED
 	fi
