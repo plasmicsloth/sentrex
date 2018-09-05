@@ -1,6 +1,4 @@
 #!/bin/bash
-<<<<<<< HEAD
-
 
 # USAGE
 function usage {
@@ -119,5 +117,3 @@ else
 		touch /mnt/c/Users/Dom/Box\ Sync/sentry/FAILED
 	fi
 fi
-=======
->>>>>>> 5bccdd4f79b7370d7735c8a9d9e23a88a5a40a4b
