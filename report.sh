@@ -85,12 +85,9 @@ FILENAME="${FOLDER}/results/${STARTDATE//[\/]/}_${PRODUCT}.${OUTPUT}"
 if [ $DEBUGGING = true ]
 then
 	echo `date`
-	echo " "
-	echo "Query: ${QUERYSTRING}&key=${API_KEY}"
-	echo "curl command:\n curl $URL -o $FILENAME -d \"${QUERYSTRING}&hash=${HASH}\""
-	echo " "
-	echo "Hash: ${HASH}"
-	echo "Filename: ${FILENAME}"
+	printf "Query: ${QUERYSTRING}&key=${API_KEY}"
+	printf "curl command:\ncurl $URL -v -o $FILENAME -d \"${QUERYSTRING}&hash=${HASH}\""
+	printf "\nUser ID: ${USER_ID} | API: ${API_KEY}\nHash: ${HASH}\nFilename: ${FILENAME}\n"
 else
 	# EXECUTE CURL
 	echo `date` > ${FILENAME}.log
